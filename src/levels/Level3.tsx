@@ -9,7 +9,8 @@ import { Pic } from '../components/Pic'
 import { MicButton, type MicOutcome } from '../components/Mic'
 import { StarBurst } from '../components/Effects'
 import { Character } from '../components/Character'
-import { BG, SCENE, objectImg } from '../assets/manifest'
+import { objectImg } from '../assets/manifest'
+import { useScene, useStage } from '../components/Stage'
 import { useGame } from '../store/gameStore'
 import { L3 } from '../content/level3'
 import { TOYS, word, itIsSpec } from '../content/vocab'
@@ -34,7 +35,7 @@ export function Level3() {
   return (
     <LevelShell
       level="toyshop"
-      bg={BG.toyShop}
+      bg="toyShop"
       intro={L3.intro}
       activities={[
         { key: 'explore', title: L3.titles.explore, render: (done) => <Explore onDone={done} /> },
@@ -47,20 +48,6 @@ export function Level3() {
   )
 }
 
-/** Toy positions in the shop (stage px): centre x, bottom y, height. */
-const SPOTS: Record<string, [number, number, number]> = {
-  kite: [150, 470, 170],
-  doll: [250, 650, 150],
-  monster: [640, 810, 170],
-  plane: [640, 478, 115],
-  'computer-game': [880, 478, 95],
-  train: [840, 860, 120],
-  car: [1060, 835, 105],
-  ball: [430, 880, 105],
-  bike: [1240, 890, 165],
-  'go-kart': [1470, 890, 135],
-}
-
 function Explore({ onDone }: { onDone: () => void }) {
   const recordAttempt = useGame((s) => s.recordAttempt)
   const [seen, setSeen] = useState<string[]>([])
@@ -68,12 +55,14 @@ function Explore({ onDone }: { onDone: () => void }) {
   const [guide, setGuide] = useState<Line>(L3.exploreLead)
   const [bounce, setBounce] = useState(0)
   const all = seen.length === TOYS.length
+  const scene = useScene()
+  const { portrait: P } = useStage()
 
   return (
     <div style={{ position: 'absolute', inset: 0 }}>
       <Guide line={guide} />
       {TOYS.map((t) => {
-        const [x, y, h] = SPOTS[t.id]
+        const [x, y, h] = scene.toyShop.spots[t.id]
         const active = current === t.id
         return (
           <div key={t.id} style={{ position: 'absolute', left: x, top: y - h, transform: 'translateX(-50%)' }}>
@@ -107,7 +96,7 @@ function Explore({ onDone }: { onDone: () => void }) {
       })}
       {/* repeat panel */}
       {current && (
-        <div className="panel" style={{ position: 'absolute', left: 1280, top: 190, width: 290, padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+        <div className="panel" style={{ position: 'absolute', left: P ? 600 : 1280, top: P ? 300 : 190, width: P ? 270 : 290, padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
           <Pic pic={`obj:${current}`} size={110} />
           <div className="title-font" style={{ fontSize: 36, fontWeight: 700, color: '#245d61' }}>{word(current).en}</div>
           <button className="btn btn-sun title-font" style={{ fontSize: 22, padding: '6px 16px', display: 'flex', alignItems: 'center', gap: 6 }} onClick={() => say(word(current).itIs, 'alya')}>
@@ -130,7 +119,7 @@ function Explore({ onDone }: { onDone: () => void }) {
           />
         </div>
       )}
-      <div className="panel title-font" style={{ position: 'absolute', left: 120, top: 170, padding: '8px 22px', fontSize: 30, fontWeight: 700, color: '#245d61', display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div className="panel title-font" style={{ position: 'absolute', left: P ? 30 : 120, top: P ? 300 : 170, padding: '8px 22px', fontSize: 30, fontWeight: 700, color: '#245d61', display: 'flex', alignItems: 'center', gap: 8 }}>
         <Star size={30} color="#e0a72e" fill="#f7d77b" /> {seen.length} / {TOYS.length} toys
       </div>
       {all && (
@@ -138,7 +127,7 @@ function Explore({ onDone }: { onDone: () => void }) {
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           className="btn btn-teal title-font pulse-glow"
-          style={{ position: 'absolute', left: 120, top: 245, fontSize: 34, padding: '10px 30px' }}
+          style={{ position: 'absolute', left: P ? 30 : 120, top: P ? 380 : 245, fontSize: 34, padding: '10px 30px' }}
           onClick={() => {
             sayLine(L3.exploreDone)
             onDone()
@@ -160,6 +149,7 @@ function Memory({ onDone }: { onDone: () => void }) {
   const [fails, setFails] = useState<Record<string, number>>({})
   const [guide, setGuide] = useState<Line>(L3.memoryLead)
   const [lock, setLock] = useState(false)
+  const { portrait: P } = useStage()
 
   function flip(c: (typeof cards)[number]) {
     if (lock || open.includes(c.key) || found.includes(c.id)) return
@@ -200,7 +190,7 @@ function Memory({ onDone }: { onDone: () => void }) {
   return (
     <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,247,232,0.45)' }}>
       <Guide line={guide} />
-      <div style={{ position: 'absolute', left: 200, right: 200, top: 190, bottom: 60, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 22 }}>
+      <div style={{ position: 'absolute', left: P ? 30 : 200, right: P ? 30 : 200, top: P ? 300 : 190, bottom: 60, display: 'grid', gridTemplateColumns: P ? 'repeat(3, 1fr)' : 'repeat(4, 1fr)', gap: 22 }}>
         {cards.map((c) => {
           const up = open.includes(c.key) || found.includes(c.id)
           return (
@@ -255,7 +245,10 @@ function Organize({ onDone }: { onDone: () => void }) {
   const [burst, setBurst] = useState<{ x: number; y: number; k: number } | null>(null)
   const r = rounds[i]
   const tray = useMemo(() => shuffle(['doll', 'ball', 'train', 'kite', 'car', 'monster']), [])
-  const zones = SCENE.toyShop.zones
+  const scene = useScene()
+  const { portrait: P } = useStage()
+  const zones = scene.toyShop.zones
+  const T = scene.toyShop.tray
 
   return (
     <DragArea
@@ -303,7 +296,7 @@ function Organize({ onDone }: { onDone: () => void }) {
           </DropZone>
         )
       })}
-      <div className="panel" style={{ position: 'absolute', left: 1180, top: 250, width: 380, height: 470, display: 'grid', gridTemplateColumns: '1fr 1fr', placeItems: 'center', padding: 14 }}>
+      <div className="panel" style={{ position: 'absolute', left: T.x, top: T.y, width: T.w, height: T.h, display: 'grid', gridTemplateColumns: P ? 'repeat(3, 1fr)' : '1fr 1fr', placeItems: 'center', padding: 14 }}>
         <span className="title-font" style={{ position: 'absolute', top: -40, left: 20, fontSize: 26, fontWeight: 700, color: '#fff', background: '#8f74c9', borderRadius: 12, padding: '0 12px' }}>Toy box</span>
         {tray
           .filter((t) => !placed.some((p) => p.toy === t))
@@ -332,6 +325,7 @@ function SpeakToys({ onDone }: { onDone: () => void }) {
   const [burst, setBurst] = useState(0)
   const whats = useMemo(() => ({ en: "What's this?", tr: 'Bu ne?' }), [])
   const options = useMemo(() => shuffle([wd, ...shuffle(TOYS.filter((t) => t.id !== wd.id)).slice(0, 2)]), [wd])
+  const { portrait: P } = useStage()
 
   async function win(how: 'speech' | 'manual', partialOk = false) {
     setSolved(true)
@@ -379,7 +373,7 @@ function SpeakToys({ onDone }: { onDone: () => void }) {
   return (
     <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,247,232,0.4)' }}>
       <Guide line={guide} />
-      <div className="panel" style={{ position: 'absolute', left: 150, top: 200, width: 560, height: 560, display: 'grid', placeItems: 'center' }}>
+      <div className="panel" style={{ position: 'absolute', left: P ? 170 : 150, top: P ? 290 : 200, width: 560, height: P ? 440 : 560, display: 'grid', placeItems: 'center' }}>
         <motion.div key={r.toy} initial={{ scale: 0.4, rotate: -10 }} animate={{ scale: 1, rotate: 0 }} className="float-y">
           <Pic pic={`obj:${r.toy}`} size={330} />
         </motion.div>
@@ -387,7 +381,7 @@ function SpeakToys({ onDone }: { onDone: () => void }) {
           {r.fullSentence ? 'Say the whole sentence!' : 'Say the word or the sentence!'}
         </div>
       </div>
-      <div style={{ position: 'absolute', left: 780, top: 180, width: 700, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+      <div style={{ position: 'absolute', left: P ? 100 : 780, top: P ? 760 : 180, width: 700, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
         <div className="title-font" style={{ fontSize: 44, fontWeight: 700, color: '#245d61', background: 'rgba(255,247,232,0.9)', padding: '6px 26px', borderRadius: 24 }}>
           What&apos;s this? → <span style={{ color: '#3a9d98' }}>It&apos;s a …</span>
         </div>
@@ -425,8 +419,8 @@ function SpeakToys({ onDone }: { onDone: () => void }) {
           </div>
         )}
       </div>
-      <Character who="alya" pose={solved ? 'celebrate' : 'idle'} height={330} style={{ left: 1330, top: 540 }} />
-      {burst > 0 && <StarBurst key={burst} x={430} y={480} />}
+      {!P && <Character who="alya" pose={solved ? 'celebrate' : 'idle'} height={330} style={{ left: 1330, top: 540 }} />}
+      {burst > 0 && <StarBurst key={burst} x={P ? 450 : 430} y={P ? 500 : 480} />}
     </div>
   )
 }

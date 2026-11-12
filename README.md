@@ -109,7 +109,13 @@ All content is data in `src/content/`:
 New rounds automatically work with the activity engine, progress tracking, the review queue and the teacher dashboard. Run `npm run voices` to record new lines. A future unit = new content file + a level component (copy an existing `levels/LevelN.tsx`) + an entry in `meta.ts` and a marker position in `assets/manifest.ts`.
 
 ## Supported browsers / devices
-Latest Chrome, Edge, Safari, Firefox (no speech recognition in Firefox). Desktop and tablets in landscape; phones work but are small (a "turn sideways" hint appears in portrait). The game is laid out on a fixed 1600×900 stage scaled to fit, so artwork is never stretched and overlays stay aligned.
+Latest Chrome, Edge, Safari, Firefox (no speech recognition in Firefox).
+
+The game has two layouts and switches automatically when the device is turned:
+- **Landscape** (computer, tablet or phone held sideways): 1600×900 stage with the 16:9 artwork.
+- **Portrait** (phone or tablet held upright): 900×1600 stage with the 9:16 artwork (`assets-src/portrait-*.webp`).
+
+The stage is scaled to fit without stretching; any space left around it is filled with a blurred copy of the current background. Every overlay (map markers, toys, drop zones, players, ball path, scoreboard numbers) has its own coordinates per layout in `SCENE.l` / `SCENE.p` in `src/assets/manifest.ts`.
 
 ## Tests performed (in the built-in browser)
 - First launch: name entry with a custom name, saved, greeting uses it, map opens; returning visit shows the menu.

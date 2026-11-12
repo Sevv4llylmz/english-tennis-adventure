@@ -7,6 +7,7 @@ import { stopVoice } from '../audio/voice'
 import { sfx } from '../audio/sfx'
 import { useGame, type LevelId } from '../store/gameStore'
 import { sayLine } from './Guide'
+import { useStage } from './Stage'
 import { UI } from '../content/lines'
 
 export type MicOutcome = { kind: MatchOutcome; heard: string } | { kind: 'error'; error: RecError }
@@ -25,9 +26,10 @@ const ERROR_TEXT: Record<RecError, string> = {
 /** Grown-up consent before the browser speech recogniser is used (it may send audio to the browser vendor). */
 export function MicConsent({ onClose }: { onClose: (ok: boolean) => void }) {
   const setSettings = useGame((s) => s.setSettings)
+  const { W } = useStage()
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(20,50,52,0.55)', zIndex: 200, display: 'grid', placeItems: 'center' }}>
-      <div className="panel" style={{ width: 980, padding: '34px 44px' }}>
+      <div className="panel" style={{ width: Math.min(980, W - 40), padding: '34px 44px' }}>
         <div className="title-font" style={{ fontSize: 40, fontWeight: 700, color: '#245d61', display: 'flex', alignItems: 'center', gap: 14 }}>
           <ShieldCheck size={44} /> For grown-ups · Yetişkinler için
         </div>

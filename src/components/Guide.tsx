@@ -7,6 +7,7 @@ import { sprite, SPRITE_SIZE, type Pose } from '../assets/manifest'
 const FACE: Partial<Record<Pose, [number, number]>> = { idle: [0.67, 0.24], happy: [0.6, 0.24], wave: [0.54, 0.245], thinking: [0.68, 0.225] }
 import { say, onSpeaking } from '../audio/voice'
 import { useGame } from '../store/gameStore'
+import { useStage } from './Stage'
 import { named, type Line } from '../content/lines'
 
 /** Speak a Line in the teacher voice, filling in the player's name. */
@@ -75,6 +76,7 @@ export function Guide({
   width = 1060,
   top = 18,
   left = 120,
+  portraitTop = 140,
   onSpoken,
 }: {
   line: Line | null
@@ -85,9 +87,12 @@ export function Guide({
   width?: number
   top?: number
   left?: number
+  /** top position in the portrait (phone) layout */
+  portraitTop?: number
   onSpoken?: () => void
 }) {
   const assist = useGame((s) => s.settings.assist)
+  const stage = useStage()
   const name = useGame((s) => s.playerName) ?? 'Alya'
   const [showTr, setShowTr] = useState(false)
   const speaking = useIsSpeaking()
@@ -107,9 +112,10 @@ export function Guide({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [line])
   if (!line) return null
+  const box = stage.portrait ? { top: portraitTop, left: 20, width: stage.W - 40 } : { top, left, width }
   return (
-    <div style={{ position: 'absolute', top, left, width, display: 'flex', alignItems: 'center', gap: 16, zIndex: 20 }}>
-      <TeacherAvatar size={112} pose={pose} talking={speaking} />
+    <div style={{ position: 'absolute', ...box, display: 'flex', alignItems: 'center', gap: 14, zIndex: 20 }}>
+      <TeacherAvatar size={stage.portrait ? 100 : 112} pose={pose} talking={speaking} />
       <AnimatePresence mode="wait">
         <motion.div
           key={line.en}

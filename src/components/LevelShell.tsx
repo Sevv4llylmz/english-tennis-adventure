@@ -1,7 +1,8 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Map as MapIcon, Settings as Gear, Star, Play } from 'lucide-react'
-import { Backdrop } from './Stage'
+import { Backdrop, useStage } from './Stage'
+import type { BgKey } from '../assets/manifest'
 import { Character } from './Character'
 import { Badge, Confetti } from './Effects'
 import { sayLine, TrButton } from './Guide'
@@ -35,7 +36,7 @@ export function LevelShell({
   children,
 }: {
   level: LevelId
-  bg: string
+  bg: BgKey
   bgDim?: number
   bgBlur?: number
   intro: Line[]
@@ -49,6 +50,7 @@ export function LevelShell({
   const setActivityIndex = useGame((s) => s.setActivityIndex)
   const completeLevel = useGame((s) => s.completeLevel)
   const addTime = useGame((s) => s.addTime)
+  const { portrait } = useStage()
   const [phase, setPhase] = useState<'intro' | 'play' | 'between' | 'reward'>('intro')
   const [idx, setIdx] = useState(Math.min(saved, activities.length - 1))
 
@@ -85,12 +87,13 @@ export function LevelShell({
   }
 
   const act = activities[idx]
+  const P = portrait
   return (
     <div style={{ position: 'absolute', inset: 0 }}>
-      <Backdrop src={bg} dim={bgDim} blur={bgBlur} />
+      <Backdrop bg={bg} dim={bgDim} blur={bgBlur} />
       {children}
       {/* header */}
-      <div style={{ position: 'absolute', top: 20, left: 20, display: 'flex', flexDirection: 'column', gap: 12, zIndex: 30 }}>
+      <div style={{ position: 'absolute', top: 20, left: 20, display: 'flex', flexDirection: P ? 'row' : 'column', gap: 12, zIndex: 30 }}>
         <TopButton label="Back to map" onClick={() => go({ name: 'map' })}>
           <MapIcon size={40} color="#245d61" />
         </TopButton>
@@ -109,7 +112,7 @@ export function LevelShell({
             ))}
           </div>
         )}
-        {phase === 'play' && act && (
+        {phase === 'play' && act && !P && (
           <div className="title-font" style={{ fontSize: 22, fontWeight: 600, color: '#fff', background: 'rgba(36,93,97,0.85)', padding: '4px 16px', borderRadius: 16 }}>
             {act.title.en}
           </div>
@@ -117,10 +120,10 @@ export function LevelShell({
       </div>
 
       {phase === 'intro' && (
-        <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
-          <Character who="teacher" pose="wave" height={500} style={{ left: 40, bottom: 30 }} />
-          <Character who="alya" pose="happy" height={480} style={{ right: 40, bottom: 30 }} />
-          <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="panel" style={{ width: 640, padding: '34px 40px', textAlign: 'center', zIndex: 10, position: 'relative' }}>
+        <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: P ? 'start center' : 'center', paddingTop: P ? 170 : 0 }}>
+          <Character who="teacher" pose="wave" height={P ? 430 : 500} style={{ left: P ? 30 : 40, bottom: 30 }} />
+          <Character who="alya" pose="happy" height={P ? 410 : 480} style={{ right: P ? 30 : 40, bottom: 30 }} />
+          <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="panel" style={{ width: P ? 820 : 640, padding: '34px 40px', textAlign: 'center', zIndex: 10, position: 'relative' }}>
             <TrButton lines={[meta.name, ...intro]} style={{ position: 'absolute', top: 16, right: 16 }} />
             <div className="title-font" style={{ fontSize: 30, color: '#3a9d98', fontWeight: 600 }}>
               Level {meta.num} · {meta.place}
@@ -173,11 +176,11 @@ export function LevelShell({
       </AnimatePresence>
 
       {phase === 'reward' && (
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(36,93,97,0.45)', zIndex: 60, display: 'grid', placeItems: 'center' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(36,93,97,0.45)', zIndex: 60, display: 'grid', placeItems: P ? 'start center' : 'center', paddingTop: P ? 140 : 0 }}>
           <Confetti />
-          <Character who="alya" pose="celebrate" height={480} style={{ left: 120, bottom: 40 }} />
-          <Character who="teacher" pose="happy" height={480} flip style={{ right: 120, bottom: 40 }} />
-          <motion.div initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', bounce: 0.5 }} className="panel" style={{ width: 640, padding: 36, textAlign: 'center' }}>
+          <Character who="alya" pose="celebrate" height={P ? 420 : 480} style={{ left: P ? 40 : 120, bottom: 40 }} />
+          <Character who="teacher" pose="happy" height={P ? 420 : 480} flip style={{ right: P ? 40 : 120, bottom: 40 }} />
+          <motion.div initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', bounce: 0.5 }} className="panel" style={{ width: P ? 800 : 640, padding: 36, textAlign: 'center' }}>
             <motion.div initial={{ rotateY: 180 }} animate={{ rotateY: 0 }} transition={{ duration: 1.1, delay: 0.3 }} style={{ display: 'flex', justifyContent: 'center' }}>
               <Badge meta={meta} size={230} />
             </motion.div>

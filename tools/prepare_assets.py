@@ -38,8 +38,21 @@ BACKGROUNDS = {
 }
 
 
+PORTRAIT = {
+    # portrait (phone) versions, 9:16 -> 900x1600
+    "adventure-map": "portrait-adventure-map.webp",
+    "classroom": "portrait-classroom-purple.webp",
+    "toy-shop": "portrait-toy-shop.webp",
+    "grammar-room": "portrait-grammar-room.webp",
+    "tennis-court": "portrait-tennis-court.webp",
+}
+
+
 def backgrounds():
     info = {}
+    for name, fn in PORTRAIT.items():
+        im = Image.open(SRC / fn).convert("RGB").resize((900, 1600), Image.LANCZOS)
+        save_webp(im, PUB / "backgrounds" / name / f"{name}-portrait.webp", 84)
     for name, (fn, strip) in BACKGROUNDS.items():
         im = Image.open(SRC / fn).convert("RGB")
         w, h = im.size

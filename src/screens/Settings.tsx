@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ArrowLeft, Mic, Volume2 } from 'lucide-react'
-import { Backdrop } from '../components/Stage'
-import { BG } from '../assets/manifest'
+import { Backdrop, useStage } from '../components/Stage'
+
 import { useGame, type Screen } from '../store/gameStore'
 import { music, sfx } from '../audio/sfx'
 import { say } from '../audio/voice'
@@ -49,13 +49,14 @@ export function Settings({ back }: { back: Screen['name'] }) {
   const setName = useGame((st) => st.setName)
   const [nameDraft, setNameDraft] = useState(name)
   const [consent, setConsent] = useState(false)
+  const { portrait: P } = useStage()
   return (
     <div style={{ position: 'absolute', inset: 0 }}>
-      <Backdrop src={BG.classroom} dim={0.45} blur={3} />
+      <Backdrop bg="classroom" dim={0.45} blur={3} />
       <button className="btn btn-cream title-font" style={{ position: 'absolute', top: 24, left: 24, fontSize: 30, padding: '10px 26px', display: 'flex', alignItems: 'center', gap: 8, zIndex: 5 }} onClick={() => go({ name: back === 'menu' ? 'menu' : 'map' } as Screen)}>
         <ArrowLeft size={30} /> Back
       </button>
-      <div className="panel" style={{ position: 'absolute', left: 260, right: 260, top: 30, bottom: 30, padding: '22px 44px', overflowY: 'auto' }}>
+      <div className="panel" style={{ position: 'absolute', left: P ? 24 : 260, right: P ? 24 : 260, top: P ? 130 : 30, bottom: 30, padding: P ? '20px 28px' : '22px 44px', overflowY: 'auto' }}>
         <div className="title-font" style={{ fontSize: 52, fontWeight: 700, color: '#3a9d98' }}>Settings · Ayarlar</div>
         <Row label="My name" sub="Display name / takma ad">
           <input className="name-input" value={nameDraft} maxLength={20} onChange={(e) => setNameDraft(e.target.value)} style={{ fontSize: 28, padding: '6px 16px', width: 240 }} aria-label="Display name" />

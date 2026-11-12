@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence, LayoutGroup } from 'motion/react'
 import { Sparkles, ArrowRight, MessageSquare, HelpCircle, Volume2 } from 'lucide-react'
 import { LevelShell } from '../components/LevelShell'
+import { useStage } from '../components/Stage'
 import { ChoiceActivity, outcomeFor } from '../components/ChoiceActivity'
 import { Guide, sayLine, TrButton } from '../components/Guide'
 import { DragArea, Draggable, DropZone } from '../components/Drag'
@@ -9,7 +10,7 @@ import { Pic } from '../components/Pic'
 import { SentenceBuilder } from '../components/SentenceBuilder'
 import { StarBurst } from '../components/Effects'
 import { Character } from '../components/Character'
-import { BG } from '../assets/manifest'
+
 import { useGame } from '../store/gameStore'
 import { L4, articleItems, buildItems, yesNoRounds, itsCheckRound, isntCheckRound } from '../content/level4'
 import { PRAISE, TRY, pick, type Line } from '../content/lines'
@@ -20,7 +21,7 @@ export function Level4() {
   return (
     <LevelShell
       level="grammar"
-      bg={BG.grammarRoom}
+      bg="grammarRoom"
       bgDim={0.12}
       intro={L4.intro}
       activities={[
@@ -60,6 +61,7 @@ function Block({ id, text, color = '#b8a2db', highlight }: { id: string; text: s
 
 /** Activity 1: It is a pencil. -> Is it a pencil?  (watch, then build it yourself) */
 function StatementToQuestion({ onDone }: { onDone: () => void }) {
+  const { portrait: P } = useStage()
   const recordAttempt = useGame((s) => s.recordAttempt)
   const [phase, setPhase] = useState<'statement' | 'question' | 'task'>('statement')
   const [showTr, setShowTr] = useState(false)
@@ -74,7 +76,7 @@ function StatementToQuestion({ onDone }: { onDone: () => void }) {
     <div style={{ position: 'absolute', inset: 0 }}>
       <Guide line={guide} />
       {phase !== 'task' ? (
-        <div className="panel" style={{ position: 'absolute', left: 170, right: 170, top: 210, height: 540, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 26 }}>
+        <div className="panel" style={{ position: 'absolute', left: P ? 24 : 170, right: P ? 24 : 170, top: P ? 300 : 210, height: P ? 620 : 540, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 26 }}>
           <TrButton lines={[q ? L4.questionInfo : L4.statementInfo]} onShow={() => setShowTr(true)} style={{ position: 'absolute', top: 18, right: 18 }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <Pic pic="obj:pencil" size={130} />
@@ -131,7 +133,7 @@ function StatementToQuestion({ onDone }: { onDone: () => void }) {
           </div>
         </div>
       ) : (
-        <div className="panel" style={{ position: 'absolute', left: 170, right: 170, top: 210, height: 560, display: 'grid', placeItems: 'center' }}>
+        <div className="panel" style={{ position: 'absolute', left: P ? 24 : 170, right: P ? 24 : 170, top: P ? 300 : 210, height: P ? 680 : 560, display: 'grid', placeItems: 'center' }}>
           <div style={{ textAlign: 'center' }}>
             <div className="title-font" style={{ fontSize: 34, color: '#3a9d98', marginBottom: 10 }}>
               It is a ball. → <b>?</b>
@@ -159,13 +161,14 @@ function StatementToQuestion({ onDone }: { onDone: () => void }) {
           </div>
         </div>
       )}
-      {burst > 0 && <StarBurst key={burst} x={800} y={480} n={12} />}
+      {burst > 0 && <StarBurst key={burst} x={P ? 450 : 800} y={P ? 640 : 480} n={12} />}
     </div>
   )
 }
 
 /** Activities 2 & 3: It is -> It's,  is not -> isn't (same meaning). */
 function Contraction({ kind, onDone }: { kind: 'its' | 'isnt'; onDone: () => void }) {
+  const { portrait: P } = useStage()
   const [short, setShort] = useState(false)
   const [check, setCheck] = useState(false)
   const explain = kind === 'its' ? L4.itsExplain : L4.isntExplain
@@ -180,7 +183,7 @@ function Contraction({ kind, onDone }: { kind: 'its' | 'isnt'; onDone: () => voi
   return (
     <div style={{ position: 'absolute', inset: 0 }}>
       <Guide line={guide} />
-      <div className="panel" style={{ position: 'absolute', left: 150, right: 150, top: 195, height: 640, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 22 }}>
+      <div className="panel" style={{ position: 'absolute', left: P ? 24 : 150, right: P ? 24 : 150, top: P ? 300 : 195, height: P ? 760 : 640, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 22 }}>
         <TrButton lines={short ? [how, same] : [same]} onShow={() => setShowTr(true)} style={{ position: 'absolute', top: 18, right: 18 }} />
         <Pic pic={pic} size={120} />
         <LayoutGroup>
@@ -255,6 +258,7 @@ function Contraction({ kind, onDone }: { kind: 'its' | 'isnt'; onDone: () => voi
 
 /** Activity 5: drag a / an into the gap. */
 function Articles({ onDone }: { onDone: () => void }) {
+  const { portrait: P } = useStage()
   const recordAttempt = useGame((s) => s.recordAttempt)
   const [stage, setStage] = useState<'learn' | 'play'>('learn')
   const [i, setI] = useState(0)
@@ -268,12 +272,12 @@ function Articles({ onDone }: { onDone: () => void }) {
     return (
       <div style={{ position: 'absolute', inset: 0 }}>
         <Guide line={guide} onSpoken={() => guide === L4.aExplain && setGuide(L4.anExplain)} />
-        <div className="panel" style={{ position: 'absolute', left: 110, right: 110, top: 190, height: 610, display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
+        <div className="panel" style={{ position: 'absolute', left: P ? 24 : 110, right: P ? 24 : 110, top: P ? 300 : 190, height: P ? 1080 : 610, display: 'flex', flexDirection: P ? 'column' : 'row', justifyContent: 'space-around', alignItems: 'center' }}>
           {[
             { art: 'a', items: [['obj:ball', 'a ball'], ['obj:kite', 'a kite'], ['obj:doll', 'a doll']], line: L4.aExplain },
             { art: 'an', items: [['fruit:apple', 'an apple'], ['fruit:orange', 'an orange'], ['obj:monster', 'an ugly monster']], line: L4.anExplain },
           ].map((g) => (
-            <div key={g.art} className="card" role="button" tabIndex={0} onClick={() => setGuide(g.line)} style={{ width: 590, padding: '18px 24px', position: 'relative' }}>
+            <div key={g.art} className="card" role="button" tabIndex={0} onClick={() => setGuide(g.line)} style={{ width: P ? 800 : 590, padding: '18px 24px', position: 'relative' }}>
               <TrButton lines={[g.line]} style={{ position: 'absolute', top: 14, right: 14 }} />
               <div className="title-font" style={{ fontSize: 80, fontWeight: 700, color: g.art === 'a' ? '#3a9d98' : '#8f74c9', lineHeight: 1 }}>{g.art}</div>
               {g.items.map(([p, t]) => (
@@ -284,13 +288,13 @@ function Articles({ onDone }: { onDone: () => void }) {
                   </span>
                 </div>
               ))}
-              <div style={{ fontSize: 23, fontWeight: 800, color: '#e0709b', lineHeight: 1.3, marginTop: 8 }}>{g.line.tr}</div>
+              <div style={{ fontSize: P ? 30 : 23, fontWeight: 800, color: '#e0709b', lineHeight: 1.3, marginTop: 8 }}>{g.line.tr}</div>
             </div>
           ))}
         </div>
         <button
           className="btn btn-teal title-font"
-          style={{ position: 'absolute', left: 690, top: 812, fontSize: 36, padding: '8px 40px' }}
+          style={{ position: 'absolute', left: P ? 320 : 690, top: P ? 1420 : 812, fontSize: 36, padding: '8px 40px' }}
           onClick={() => {
             setStage('play')
             setGuide(L4.articleTask)
@@ -335,11 +339,11 @@ function Articles({ onDone }: { onDone: () => void }) {
       }}
     >
       <Guide line={guide} />
-      <div className="panel" style={{ position: 'absolute', left: 200, right: 200, top: 210, height: 560, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 40 }}>
+      <div className="panel" style={{ position: 'absolute', left: P ? 24 : 200, right: P ? 24 : 200, top: P ? 300 : 210, height: P ? 720 : 560, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 40 }}>
         <motion.div key={it.noun} initial={{ scale: 0.5 }} animate={{ scale: 1 }}>
           <Pic pic={it.pic} size={180} />
         </motion.div>
-        <div className="title-font" style={{ display: 'flex', alignItems: 'center', gap: 18, fontSize: 70, fontWeight: 700, color: '#245d61' }}>
+        <div className="title-font" style={{ display: 'flex', alignItems: 'center', gap: 18, fontSize: P ? 54 : 70, fontWeight: 700, color: '#245d61' }}>
           It&apos;s
           <DropZone id="gap" label="gap" style={{ minWidth: 150, height: 100, borderRadius: 22, border: '5px dashed #3a9d98', display: 'grid', placeItems: 'center', background: filled ? '#d6f5e1' : 'rgba(255,255,255,0.6)' }}>
             {filled && <span style={{ color: '#3fae6a' }}>{filled}</span>}
@@ -354,13 +358,14 @@ function Articles({ onDone }: { onDone: () => void }) {
           ))}
         </div>
       </div>
-      {burst > 0 && <StarBurst key={burst} x={800} y={560} />}
+      {burst > 0 && <StarBurst key={burst} x={P ? 450 : 800} y={P ? 640 : 560} />}
     </DragArea>
   )
 }
 
 /** Activity 6: Build a sentence from word tiles. */
 function Build({ onDone }: { onDone: () => void }) {
+  const { portrait: P } = useStage()
   const recordAttempt = useGame((s) => s.recordAttempt)
   const [i, setI] = useState(0)
   const [misses, setMisses] = useState(0)
@@ -370,7 +375,7 @@ function Build({ onDone }: { onDone: () => void }) {
   return (
     <div style={{ position: 'absolute', inset: 0 }}>
       <Guide line={guide} />
-      <div className="panel" style={{ position: 'absolute', left: 150, right: 150, top: 200, height: 600, display: 'grid', placeItems: 'center' }}>
+      <div className="panel" style={{ position: 'absolute', left: P ? 24 : 150, right: P ? 24 : 150, top: P ? 300 : 200, height: P ? 720 : 600, display: 'grid', placeItems: 'center' }}>
         <SentenceBuilder
           key={i}
           words={it.words}
@@ -398,8 +403,8 @@ function Build({ onDone }: { onDone: () => void }) {
           }}
         />
       </div>
-      <Character who="alya" pose={misses ? 'thinking' : 'idle'} height={300} style={{ left: 1390, top: 580 }} />
-      {burst > 0 && <StarBurst key={burst} x={800} y={420} n={12} />}
+      <Character who="alya" pose={misses ? 'thinking' : 'idle'} height={300} style={P ? { left: 600, top: 1180 } : { left: 1390, top: 580 }} />
+      {burst > 0 && <StarBurst key={burst} x={P ? 450 : 800} y={P ? 560 : 420} n={12} />}
     </div>
   )
 }

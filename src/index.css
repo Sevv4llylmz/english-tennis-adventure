@@ -21,6 +21,8 @@ body,
 #root {
   margin: 0;
   height: 100%;
+  overscroll-behavior: none;
+  touch-action: manipulation;
   background: #1d4a4d;
   overflow: hidden;
   font-family: var(--font-body);

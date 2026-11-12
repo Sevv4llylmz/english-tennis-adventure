@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react'
 import { Eye, CircleCheck } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { LevelShell } from '../components/LevelShell'
+import { useStage } from '../components/Stage'
 import { ChoiceActivity, outcomeFor } from '../components/ChoiceActivity'
 import { Guide, sayLine } from '../components/Guide'
 import { DragArea, Draggable, DropZone } from '../components/Drag'
 import { Pic } from '../components/Pic'
 import { Character } from '../components/Character'
 import { StarBurst } from '../components/Effects'
-import { BG, objectImg } from '../assets/manifest'
+import { objectImg } from '../assets/manifest'
 import { useGame } from '../store/gameStore'
 import { L2, questionDetective, listenDo, engTrRounds, engTrLead, aboutYou } from '../content/level2'
 import { PRAISE, TRY, pick, type Line } from '../content/lines'
@@ -20,7 +21,7 @@ export function Level2() {
   return (
     <LevelShell
       level="detective"
-      bg={BG.map}
+      bg="map"
       bgDim={0.35}
       bgBlur={4}
       intro={L2.intro}
@@ -38,12 +39,13 @@ export function Level2() {
 
 /** Magnifying-glass frame that turns the campus into a detective scene. */
 function DetectiveFrame() {
+  const { W, H } = useStage()
   return (
-    <svg width="1600" height="900" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.18 }} aria-hidden>
-      <circle cx="1460" cy="760" r="90" fill="none" stroke="#245d61" strokeWidth="18" />
-      <line x1="1395" y1="825" x2="1320" y2="900" stroke="#245d61" strokeWidth="26" strokeLinecap="round" />
+    <svg width={W} height={H} style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.18 }} aria-hidden>
+      <circle cx={W - 140} cy={H - 140} r="90" fill="none" stroke="#245d61" strokeWidth="18" />
+      <line x1={W - 205} y1={H - 75} x2={W - 280} y2={H} stroke="#245d61" strokeWidth="26" strokeLinecap="round" />
       {Array.from({ length: 9 }).map((_, i) => (
-        <path key={i} d={`M${60 + i * 50} ${860 - (i % 2) * 30} q12 -18 24 0`} stroke="#245d61" strokeWidth="8" fill="none" />
+        <path key={i} d={`M${60 + i * 50} ${H - 40 - (i % 2) * 30} q12 -18 24 0`} stroke="#245d61" strokeWidth="8" fill="none" />
       ))}
     </svg>
   )
@@ -126,7 +128,8 @@ function ListenAndDo({ onDone }: { onDone: () => void }) {
     setGuide(STEP_HINT[step])
   }
 
-  const teacherX = teacherAway ? 1700 : 1060
+  const { portrait: P } = useStage()
+  const teacherX = P ? (teacherAway ? 1000 : 440) : teacherAway ? 1700 : 1060
   return (
     <DragArea
       onDrop={(item, target) => {
@@ -134,7 +137,7 @@ function ListenAndDo({ onDone }: { onDone: () => void }) {
         if (item === 'pencil') {
           setPassed(true)
           sfx.drop()
-          success(1180, 520, async () => {
+          success(P ? 560 : 1180, P ? 1080 : 520, async () => {
             await sayLine(listenDo.thanks)
             await say(listenDo.welcome, 'alya')
           })
@@ -146,7 +149,7 @@ function ListenAndDo({ onDone }: { onDone: () => void }) {
     >
       <Guide line={guide} />
       {/* Teacher */}
-      <motion.div initial={false} animate={{ x: teacherX }} transition={{ duration: 1.3, ease: 'easeInOut' }} style={{ position: 'absolute', left: 0, top: 260, width: 440, height: 600 }}>
+      <motion.div initial={false} animate={{ x: teacherX }} transition={{ duration: 1.3, ease: 'easeInOut' }} style={{ position: 'absolute', left: 0, top: P ? 900 : 260, width: 440, height: 600 }}>
         <Character
           who="teacher"
           pose={teacherPose}
@@ -154,7 +157,7 @@ function ListenAndDo({ onDone }: { onDone: () => void }) {
           flip
           style={{ left: 0, bottom: 0 }}
           label="Teacher"
-          onClick={step === 'look' && !busy ? () => success(1250, 450, () => sayLine(listenDo.cool)) : undefined}
+          onClick={step === 'look' && !busy ? () => success(P ? 620 : 1250, P ? 1100 : 450, () => sayLine(listenDo.cool)) : undefined}
         />
         {step === 'pass' && !passed && (
           <DropZone id="teacher-hand" label="Teacher's hand" style={{ position: 'absolute', left: -10, top: 170, width: 230, height: 230, borderRadius: '50%', border: '6px dashed rgba(58,157,152,0.8)', background: 'rgba(255,255,255,0.25)' }} />
@@ -164,7 +167,7 @@ function ListenAndDo({ onDone }: { onDone: () => void }) {
 
       {/* left side props per step */}
       {step === 'pass' && (
-        <div className="panel" style={{ position: 'absolute', left: 120, top: 300, width: 760, height: 420, display: 'flex', alignItems: 'center', justifyContent: 'space-around' }}>
+        <div className="panel" style={{ position: 'absolute', left: P ? 30 : 120, top: 300, width: P ? 840 : 760, height: P ? 380 : 420, display: 'flex', alignItems: 'center', justifyContent: 'space-around' }}>
           {['ruler', 'pencil', 'rubber'].map((id) =>
             passed && id === 'pencil' ? (
               <div key={id} style={{ width: 170 }} />
@@ -178,7 +181,7 @@ function ListenAndDo({ onDone }: { onDone: () => void }) {
       )}
       {step === 'look' && (
         <>
-          <Character who="alya" pose="idle" height={520} style={{ left: 260, top: 300 }} label="Alya" onClick={() => !busy && miss()} />
+          <Character who="alya" pose="idle" height={520} style={P ? { left: 40, top: 970 } : { left: 260, top: 300 }} label="Alya" onClick={() => !busy && miss()} />
           <motion.button
             className="btn btn-mint title-font"
             aria-label="I'm looking at you"
@@ -186,8 +189,8 @@ function ListenAndDo({ onDone }: { onDone: () => void }) {
             initial={{ scale: 0 }}
             animate={{ scale: [1, 1.08, 1] }}
             transition={{ duration: 1.4, repeat: Infinity }}
-            onClick={() => !busy && success(800, 560, () => sayLine(listenDo.cool))}
-            style={{ position: 'absolute', left: 690, top: 470, width: 240, height: 200, borderRadius: 40, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+            onClick={() => !busy && success(P ? 450 : 800, P ? 660 : 560, () => sayLine(listenDo.cool))}
+            style={{ position: 'absolute', left: P ? 330 : 690, top: P ? 560 : 470, width: 240, height: 200, borderRadius: 40, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}
           >
             <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <Eye size={70} strokeWidth={2.4} />
@@ -198,7 +201,7 @@ function ListenAndDo({ onDone }: { onDone: () => void }) {
         </>
       )}
       {(step === 'open' || step === 'close') && (
-        <div className="panel" style={{ position: 'absolute', left: 120, top: 290, width: 820, height: 460, display: 'flex', alignItems: 'center', justifyContent: 'space-around' }}>
+        <div className="panel" style={{ position: 'absolute', left: P ? 40 : 120, top: P ? 310 : 290, width: 820, height: 460, display: 'flex', alignItems: 'center', justifyContent: 'space-around' }}>
           <button
             aria-label="book"
             className="card"
@@ -208,11 +211,11 @@ function ListenAndDo({ onDone }: { onDone: () => void }) {
               if (step === 'open' && !bookOpen) {
                 sfx.flip()
                 setBookOpen(true)
-                success(530, 520)
+                success(P ? 280 : 530, 520)
               } else if (step === 'close' && bookOpen) {
                 sfx.flip()
                 setBookOpen(false)
-                success(530, 520)
+                success(P ? 280 : 530, 520)
               } else miss()
             }}
           >
@@ -224,7 +227,7 @@ function ListenAndDo({ onDone }: { onDone: () => void }) {
         </div>
       )}
       {step === 'comeback' && (
-        <div style={{ position: 'absolute', left: 140, top: 300, display: 'flex', flexDirection: 'column', gap: 22 }}>
+        <div style={{ position: 'absolute', left: P ? 40 : 140, top: 300, display: 'flex', flexDirection: 'column', gap: 22 }}>
           <Character who="alya" pose="thinking" height={360} style={{ position: 'relative', left: 0, top: 0 }} />
           <div style={{ display: 'flex', gap: 20 }}>
             {listenDo.comeBackOpts.map((o) => (
@@ -235,7 +238,7 @@ function ListenAndDo({ onDone }: { onDone: () => void }) {
                 style={{ fontSize: 40, padding: '16px 30px', fontWeight: 600, color: '#245d61', opacity: teacherAway ? 1 : 0.5 }}
                 onClick={() => {
                   if (o === listenDo.comeBack) {
-                    success(700, 760, async () => {
+                    success(P ? 450 : 700, P ? 760 : 760, async () => {
                       await say(o, 'alya')
                       setTeacherAway(false)
                       await new Promise((r) => setTimeout(r, 1300))

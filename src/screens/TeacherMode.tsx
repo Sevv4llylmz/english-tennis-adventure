@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { ArrowLeft, Lock, Download, RotateCcw, CheckCircle2, Circle } from 'lucide-react'
+import { useStage } from '../components/Stage'
 import { useGame, LEVEL_ORDER, type Attempt, reviewKeys } from '../store/gameStore'
 import { LEVELS } from '../content/meta'
 import { ALL_WORDS } from '../content/vocab'
@@ -94,6 +95,7 @@ export function TeacherMode() {
   const [open, setOpen] = useState(false)
   const st = useGame()
   const data = useMemo(() => analyse(st.attempts), [st.attempts])
+  const { portrait: P } = useStage()
   if (!open) return <Pin onOk={() => setOpen(true)} />
 
   const speech = st.speech
@@ -147,7 +149,7 @@ export function TeacherMode() {
         <div style={{ ...card, marginBottom: 16, fontWeight: 700 }}>No activity recorded yet. Data appears here as soon as the student plays.</div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: P ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 16, marginBottom: 16 }}>
         <div style={card}>
           <div style={h}>Overview</div>
           <div>Activities answered: <b>{data.total}</b></div>
@@ -182,7 +184,7 @@ export function TeacherMode() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: P ? '1fr' : '1fr 1fr', gap: 16, marginBottom: 16 }}>
         <div style={card}>
           <div style={h}>Teaching insights</div>
           {data.insights.length === 0 && <div>Not enough data yet (insights appear after a few answers per topic).</div>}
@@ -222,7 +224,7 @@ export function TeacherMode() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: P ? '1fr' : '1.2fr 1fr', gap: 16 }}>
         <div style={card}>
           <div style={h}>By topic</div>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>

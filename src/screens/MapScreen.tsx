@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { Lock, Check, Home, Trophy, Settings as Gear } from 'lucide-react'
-import { Backdrop } from '../components/Stage'
+import { Backdrop, useScene, useStage } from '../components/Stage'
 import { Guide, sayLine } from '../components/Guide'
 import { LevelIcon } from '../components/Effects'
 import { TopButton } from '../components/LevelShell'
-import { BG, SCENE } from '../assets/manifest'
 import { useGame, isUnlocked, LEVEL_ORDER, type LevelId } from '../store/gameStore'
 import { LEVELS } from '../content/meta'
 import { UI, WELCOME, type Line } from '../content/lines'
@@ -24,6 +23,8 @@ export function MapScreen() {
   const [selected, setSelected] = useState<LevelId | null>(null)
   const [guide, setGuide] = useState<Line | null>(null)
   const firstVisit = !LEVEL_ORDER.some((l) => completed[l])
+  const scene = useScene()
+  const { portrait, W } = useStage()
 
   useEffect(() => {
     if (firstVisit) {
@@ -36,13 +37,13 @@ export function MapScreen() {
   const next = LEVEL_ORDER.find((l) => !completed[l] && isUnlocked(l, completed))
   // Alya stands next to the next open challenge
   const nextIdx = next ? LEVEL_ORDER.indexOf(next) : 4
-  const alyaPos = SCENE.map.markers[nextIdx]
+  const alyaPos = scene.map.markers[nextIdx]
 
   return (
     <div style={{ position: 'absolute', inset: 0 }}>
-      <Backdrop src={BG.map} />
-      {guide && <Guide line={guide} auto={!firstVisit} width={900} top={14} />}
-      <div style={{ position: 'absolute', top: 20, left: 20, display: 'flex', flexDirection: 'column', gap: 12, zIndex: 30 }}>
+      <Backdrop bg="map" />
+      {guide && <Guide line={guide} auto={!firstVisit} width={900} top={14} portraitTop={122} />}
+      <div style={{ position: 'absolute', top: 20, left: 20, display: 'flex', flexDirection: portrait ? 'row' : 'column', gap: 12, zIndex: 30 }}>
         <TopButton label="Menu" onClick={() => go({ name: 'menu' })}>
           <Home size={40} color="#245d61" />
         </TopButton>
@@ -54,10 +55,10 @@ export function MapScreen() {
         </TopButton>
       </div>
 
-      <Character who="alya" pose="wave" height={190} style={{ left: alyaPos.x + 40, top: alyaPos.y - 170, zIndex: 5 }} />
+      <Character who="alya" pose="wave" height={190} style={{ left: Math.min(alyaPos.x + 40, W - 170), top: alyaPos.y - 170, zIndex: 5 }} />
 
       {LEVELS.map((lv, i) => {
-        const p = SCENE.map.markers[i]
+        const p = scene.map.markers[i]
         const unlocked = isUnlocked(lv.id, completed)
         const done = !!completed[lv.id]
         const isNext = lv.id === next

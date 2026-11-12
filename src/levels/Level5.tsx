@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'motion/react'
 import { Map as MapIcon, Settings as Gear, Play, RotateCcw, Trophy, Volume2 } from 'lucide-react'
-import { Backdrop } from '../components/Stage'
+import { Backdrop, useScene, useStage } from '../components/Stage'
 import { Character } from '../components/Character'
 import { Guide, sayLine, TrButton } from '../components/Guide'
 import { TopButton } from '../components/LevelShell'
@@ -10,7 +10,7 @@ import { SentenceBuilder } from '../components/SentenceBuilder'
 import { MicButton, type MicOutcome } from '../components/Mic'
 import { Confetti, TrophyArt, StarBurst } from '../components/Effects'
 import { TennisBall, Pic } from '../components/Pic'
-import { BG, SCENE, type Pose } from '../assets/manifest'
+import { type Pose } from '../assets/manifest'
 import { useGame, reviewKeys } from '../store/gameStore'
 import { L5, buildTennisQuestions, itIsSpec, type TennisQ } from '../content/tennis'
 import { levelMeta } from '../content/meta'
@@ -20,10 +20,6 @@ import { sfx } from '../audio/sfx'
 import { say, stopVoice } from '../audio/voice'
 import type { Option } from '../content/types'
 
-const C = SCENE.court
-const ALYA_HIT = { x: 445, y: 540 }
-const TEACHER_HIT = { x: 1155, y: 540 }
-const COURT_Y = 688
 const SCORE_TEXT = ['0', '15', '30', '40', 'Game']
 
 /**
@@ -59,6 +55,13 @@ export function Level5() {
   const alive = useRef(true)
   const scoreRef = useRef({ alya: 0, teacher: 0 })
   scoreRef.current = score
+  // court geometry for the current orientation (landscape or portrait artwork)
+  const { portrait: P, W } = useStage()
+  const C = useScene().court
+  const ALYA_HIT = C.alyaHit
+  const TEACHER_HIT = C.teacherHit
+  const COURT_Y = C.bounceY
+  const PH = C.playerH
 
   useEffect(() => {
     alive.current = true
@@ -109,23 +112,23 @@ export function Level5() {
   async function teacherShot() {
     setTeacherPose('swing')
     sfx.hit()
-    const bounce = { x: 620 + Math.random() * 60, y: COURT_Y }
-    await arc(TEACHER_HIT, bounce, 300, 760)
+    const bounce = { x: C.bounceAlyaSide + Math.random() * 50, y: COURT_Y }
+    await arc(TEACHER_HIT, bounce, C.peakY, 760)
     sfx.bounce()
     setTeacherPose('ready')
-    await arc(bounce, ALYA_HIT, 470, 420)
+    await arc(bounce, ALYA_HIT, (COURT_Y + ALYA_HIT.y) / 2 - 60, 420)
   }
   async function alyaShot(winner: boolean) {
     setAlyaPose('swing')
     sfx.hit()
-    const bounce = { x: 1000 + Math.random() * 60, y: COURT_Y }
-    await arc(ALYA_HIT, bounce, 290, 760)
+    const bounce = { x: C.bounceTeacherSide + Math.random() * 50, y: COURT_Y }
+    await arc(ALYA_HIT, bounce, C.peakY - 10, 760)
     sfx.bounce()
     setAlyaPose('ready')
     if (winner) {
       setTeacherPose('thinking')
-      await arc(bounce, { x: 1720, y: 560 }, 470, 650)
-    } else await arc(bounce, TEACHER_HIT, 470, 420)
+      await arc(bounce, { x: W + 120, y: TEACHER_HIT.y + 20 }, (COURT_Y + TEACHER_HIT.y) / 2 - 60, 650)
+    } else await arc(bounce, TEACHER_HIT, (COURT_Y + TEACHER_HIT.y) / 2 - 60, 420)
   }
 
   // ---------------------------------------------------------------- match flow
@@ -158,7 +161,7 @@ export function Level5() {
     if (result.teacherPoint) {
       // the ball slips past Alya
       setAlyaPose('sad')
-      await arc(ALYA_HIT, { x: -80, y: 640 }, 500, 600)
+      await arc(ALYA_HIT, { x: -80, y: ALYA_HIT.y + 100 }, ALYA_HIT.y - 40, 600)
       const atMax = scoreRef.current.teacher >= 3
       setScore((s) => ({ ...s, teacher: Math.min(3, s.teacher + 1) }))
       setTeacherPose('happy')
@@ -218,7 +221,7 @@ export function Level5() {
 
   return (
     <div style={{ position: 'absolute', inset: 0 }}>
-      <Backdrop src={BG.court} />
+      <Backdrop bg="court" />
       {/* dynamic scoreboard numbers over the painted (blank) scoreboard */}
       {(['alya', 'teacher'] as const).map((who) => {
         const p = who === 'alya' ? C.scoreAlya : C.scoreTeacher
@@ -229,7 +232,7 @@ export function Level5() {
             initial={{ scale: 1.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             className="title-font"
-            style={{ position: 'absolute', left: p.x - 70, top: p.y - 32, width: 140, textAlign: 'center', fontSize: SCORE_TEXT[score[who]].length > 2 ? 36 : 58, fontWeight: 700, color: who === 'alya' ? '#ffe9a8' : '#e7dcff', textShadow: '0 0 10px rgba(255,255,255,0.35)', lineHeight: '64px' }}
+            style={{ position: 'absolute', left: p.x - 70, top: p.y - 32, width: 140, textAlign: 'center', fontSize: SCORE_TEXT[score[who]].length > 2 ? C.scoreSize * 0.62 : C.scoreSize, fontWeight: 700, color: who === 'alya' ? '#ffe9a8' : '#e7dcff', textShadow: '0 0 10px rgba(255,255,255,0.35)', lineHeight: '64px' }}
           >
             {SCORE_TEXT[score[who]]}
           </motion.div>
@@ -237,8 +240,8 @@ export function Level5() {
       })}
 
       {/* players (independent layers, facing each other) */}
-      <Character who="alya" pose={alyaPose} height={340} style={{ left: C.alyaX - 136, top: C.groundY - 340 }} label="Alya" />
-      <Character who="teacher" pose={teacherPose} height={340} flip style={{ left: C.teacherX - 136, top: C.groundY - 340 }} label="Teacher" />
+      {phase !== 'victory' && <Character who="alya" pose={alyaPose} height={PH} style={{ left: C.alyaX - PH * 0.4, top: C.groundY - PH }} label="Alya" />}
+      {phase !== 'victory' && <Character who="teacher" pose={teacherPose} height={PH} flip style={{ left: C.teacherX - PH * 0.4, top: C.groundY - PH }} label="Teacher" />}
       {/* ball + shadow */}
       <div ref={shadow} style={{ position: 'absolute', left: 0, top: 0, width: 48, height: 14, borderRadius: '50%', background: 'rgba(30,40,30,0.5)', transform: `translate(${TEACHER_HIT.x}px, ${COURT_Y + 22}px)`, pointerEvents: 'none', opacity: phase === 'play' ? 1 : 0 }} />
       <div ref={ball} style={{ position: 'absolute', left: 0, top: 0, transform: `translate(${TEACHER_HIT.x - 20}px, ${TEACHER_HIT.y - 20}px)`, pointerEvents: 'none', zIndex: 15, opacity: phase === 'play' ? 1 : 0, filter: q ? 'drop-shadow(0 0 12px #fff8b0)' : undefined }}>
@@ -247,7 +250,7 @@ export function Level5() {
         </div>
       </div>
 
-      <div style={{ position: 'absolute', top: 20, left: 20, display: 'flex', flexDirection: 'column', gap: 12, zIndex: 30 }}>
+      <div style={{ position: 'absolute', top: 20, left: 20, display: 'flex', flexDirection: P ? 'row' : 'column', gap: 12, zIndex: 30 }}>
         <TopButton label="Back to map" onClick={() => go({ name: 'map' })}>
           <MapIcon size={40} color="#245d61" />
         </TopButton>
@@ -258,20 +261,20 @@ export function Level5() {
       {guide && phase === 'play' && <Guide line={guide} auto={false} width={980} />}
 
       {q && phase === 'play' && (
-          <motion.div key={qKey} initial={{ y: 400, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ type: 'spring', damping: 20 }} className="panel" style={{ position: 'absolute', left: 470, top: 430, width: 660, height: 455, padding: '14px 18px', zIndex: 25, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <motion.div key={qKey} initial={{ y: 400, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ type: 'spring', damping: 20 }} className="panel" style={{ position: 'absolute', left: C.card.x, top: C.card.y, width: C.card.w, height: C.card.h, padding: '14px 18px', zIndex: 25, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
             <TennisQuestion q={q} setGuide={setGuide} setAlyaPose={setAlyaPose} onAnswered={onAnswered} />
           </motion.div>
       )}
       {flash && (
-        <motion.div initial={{ scale: 0.3, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="title-font text-outline" style={{ position: 'absolute', left: 0, right: 0, top: 470, textAlign: 'center', fontSize: 120, fontWeight: 700, color: '#f7d77b', zIndex: 40 }}>
+        <motion.div initial={{ scale: 0.3, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="title-font text-outline" style={{ position: 'absolute', left: 0, right: 0, top: P ? 1150 : 470, textAlign: 'center', fontSize: 120, fontWeight: 700, color: '#f7d77b', zIndex: 40 }}>
           {flash === 'Game' ? 'GAME!' : `${flash}!`}
         </motion.div>
       )}
-      {burst > 0 && <StarBurst key={burst} x={C.alyaX} y={420} n={12} />}
+      {burst > 0 && <StarBurst key={burst} x={C.alyaX} y={C.groundY - PH} n={12} />}
 
       {phase === 'intro' && (
-        <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', background: 'rgba(255,247,232,0.25)' }}>
-          <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="panel" style={{ width: 640, padding: '30px 40px', textAlign: 'center', marginTop: 120, position: 'relative' }}>
+        <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: P ? 'start center' : 'center', paddingTop: P ? 1060 : 0, background: 'rgba(255,247,232,0.25)' }}>
+          <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="panel" style={{ width: P ? 820 : 640, padding: '30px 40px', textAlign: 'center', marginTop: P ? 0 : 120, position: 'relative' }}>
             <TrButton lines={[levelMeta('tennis').name, ...L5.intro]} style={{ position: 'absolute', top: 16, right: 16 }} />
             <div className="title-font" style={{ fontSize: 30, color: '#3a9d98', fontWeight: 600 }}>Level 5 · Final Tournament</div>
             <div className="title-font" style={{ fontSize: 64, fontWeight: 700, color: '#e0a72e' }}>Tennis Challenge!</div>
@@ -289,9 +292,9 @@ export function Level5() {
       {phase === 'victory' && (
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(36,93,97,0.35)', zIndex: 60 }}>
           <Confetti count={110} />
-          <Character who="alya" pose="celebrate" height={460} style={{ left: 90, bottom: 40 }} />
-          <Character who="teacher" pose="happy" height={440} flip style={{ right: 90, bottom: 40 }} />
-          <motion.div initial={{ scale: 0.3, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', bounce: 0.5 }} className="panel" style={{ position: 'absolute', left: 470, top: 60, width: 660, padding: 30, textAlign: 'center' }}>
+          <Character who="alya" pose="celebrate" height={P ? 420 : 460} style={{ left: P ? 40 : 90, bottom: 40 }} />
+          <Character who="teacher" pose="happy" height={P ? 400 : 440} flip style={{ right: P ? 40 : 90, bottom: 40 }} />
+          <motion.div initial={{ scale: 0.3, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', bounce: 0.5 }} className="panel" style={{ position: 'absolute', left: (W - (P ? 820 : 660)) / 2, top: P ? 160 : 60, width: P ? 820 : 660, padding: 30, textAlign: 'center' }}>
             <motion.div animate={{ rotate: [0, -5, 5, 0], y: [0, -10, 0] }} transition={{ duration: 1.6, repeat: Infinity }} style={{ display: 'flex', justifyContent: 'center' }}>
               <TrophyArt size={240} />
             </motion.div>

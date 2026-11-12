@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { Backdrop } from '../components/Stage'
+import { Backdrop, useStage } from '../components/Stage'
 import { Character } from '../components/Character'
 import { Guide, sayLine } from '../components/Guide'
-import { BG } from '../assets/manifest'
+
 import { useGame } from '../store/gameStore'
 import { WELCOME, named } from '../content/lines'
 import { sayAll } from '../audio/voice'
@@ -16,6 +16,7 @@ export function Welcome() {
   const [value, setValue] = useState('Alya')
   const [step, setStep] = useState<'start' | 'ask' | 'greet'>('start')
   const [chosen, setChosen] = useState('Alya')
+  const { portrait: P, W } = useStage()
 
   useEffect(() => {
     if (step === 'greet') {
@@ -25,16 +26,16 @@ export function Welcome() {
 
   return (
     <div style={{ position: 'absolute', inset: 0 }}>
-      <Backdrop src={BG.map} dim={0.25} />
-      <div className="title-font text-outline" style={{ position: 'absolute', top: 30, width: '100%', textAlign: 'center', fontSize: 78, fontWeight: 700, color: '#fff', letterSpacing: 1 }}>
+      <Backdrop bg="map" dim={0.25} />
+      <div className="title-font text-outline" style={{ position: 'absolute', top: P ? 50 : 30, left: 20, right: 20, textAlign: 'center', fontSize: P ? 70 : 78, lineHeight: 1.1, fontWeight: 700, color: '#fff', letterSpacing: 1 }}>
         My English Tennis Adventure
       </div>
-      <Character who="alya" pose={step === 'greet' ? 'celebrate' : 'wave'} height={600} style={{ left: 120, bottom: 30 }} />
-      <Character who="teacher" pose={step === 'greet' ? 'happy' : 'idle'} height={560} flip style={{ right: 110, bottom: 30 }} />
+      <Character who="alya" pose={step === 'greet' ? 'celebrate' : 'wave'} height={P ? 500 : 600} style={{ left: P ? 30 : 120, bottom: 30 }} />
+      <Character who="teacher" pose={step === 'greet' ? 'happy' : 'idle'} height={P ? 470 : 560} flip style={{ right: P ? 30 : 110, bottom: 30 }} />
 
       <AnimatePresence mode="wait">
         {step === 'start' && (
-          <motion.div key="start" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} style={{ position: 'absolute', left: 500, top: 330, width: 600, textAlign: 'center' }}>
+          <motion.div key="start" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} style={{ position: 'absolute', left: (W - 600) / 2, top: P ? 470 : 330, width: 600, textAlign: 'center' }}>
             <button
               className="btn btn-teal title-font pulse-glow"
               style={{ fontSize: 58, padding: '24px 70px' }}
@@ -54,7 +55,7 @@ export function Welcome() {
         )}
         {step === 'ask' && (
           <motion.div key="ask" initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-            <Guide line={WELCOME.askName} width={900} top={160} />
+            <Guide line={WELCOME.askName} width={900} top={160} portraitTop={260} />
             <form
               onSubmit={(e) => {
                 e.preventDefault()
@@ -65,7 +66,7 @@ export function Welcome() {
                 setStep('greet')
               }}
               className="panel"
-              style={{ position: 'absolute', left: 470, top: 360, width: 660, padding: 34, textAlign: 'center' }}
+              style={{ position: 'absolute', left: (W - 660) / 2, top: P ? 430 : 360, width: 660, padding: 34, textAlign: 'center' }}
             >
               <label htmlFor="nick" className="title-font" style={{ fontSize: 34, fontWeight: 600, color: '#245d61' }}>
                 What&apos;s your name?
@@ -87,7 +88,7 @@ export function Welcome() {
           </motion.div>
         )}
         {step === 'greet' && (
-          <motion.div key="greet" initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: 'spring', bounce: 0.45 }} className="panel" style={{ position: 'absolute', left: 470, top: 250, width: 660, padding: 40, textAlign: 'center' }}>
+          <motion.div key="greet" initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: 'spring', bounce: 0.45 }} className="panel" style={{ position: 'absolute', left: (W - 660) / 2, top: P ? 330 : 250, width: 660, padding: 40, textAlign: 'center' }}>
             <div className="title-font" style={{ fontSize: 80, fontWeight: 700, color: '#3a9d98' }}>Hi, {chosen}!</div>
             <div className="title-font" style={{ fontSize: 38, color: '#245d61', marginTop: 8 }}>Welcome to your English Adventure!</div>
             <div className="title-font" style={{ fontSize: 34, color: '#8f74c9', marginTop: 8 }}>Are you ready to play?</div>

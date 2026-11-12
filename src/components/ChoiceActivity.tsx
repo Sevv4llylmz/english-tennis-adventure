@@ -8,6 +8,7 @@ import { Pic } from './Pic'
 import { Character } from './Character'
 import { MicButton, type MicOutcome } from './Mic'
 import { StarBurst } from './Effects'
+import { useStage } from './Stage'
 import { say, stopVoice } from '../audio/voice'
 import { sfx } from '../audio/sfx'
 import { useGame, type LevelId, type Outcome } from '../store/gameStore'
@@ -45,6 +46,7 @@ export function outcomeFor(misses: number, revealed: boolean): Outcome {
 // ------------------------------------------------------------------ visuals
 export function VisualView({ visual, solved, size = 1 }: { visual?: Visual; solved: boolean; size?: number }) {
   const [counted, setCounted] = useState<number[]>([])
+  const { portrait } = useStage()
   if (!visual || visual.type === 'none') return null
   switch (visual.type) {
     case 'object':
@@ -126,8 +128,8 @@ export function VisualView({ visual, solved, size = 1 }: { visual?: Visual; solv
       return null
     case 'teacher-talk':
       return (
-        <div style={{ width: 460, height: 560, position: 'relative' }}>
-          <Character who="teacher" pose={visual.pose ?? 'idle'} height={540} style={{ left: 30, bottom: 0 }} />
+        <div style={{ width: portrait ? 340 : 460, height: portrait ? 400 : 560, position: 'relative' }}>
+          <Character who="teacher" pose={visual.pose ?? 'idle'} height={portrait ? 390 : 540} style={{ left: 30, bottom: 0 }} />
         </div>
       )
     case 'qword':
@@ -249,6 +251,7 @@ export function ChoiceActivity({
   const [solved, setSolved] = useState<string | null>(null)
   const [burst, setBurst] = useState<{ x: number; y: number; k: number } | null>(null)
   const busy = useRef(false)
+  const { portrait } = useStage()
   const options = useMemo(() => (round ? shuffle(round.options) : []), [round?._k])
 
   useEffect(() => {
@@ -369,7 +372,7 @@ export function ChoiceActivity({
             initial={{ scale: 0.6, opacity: 0, rotate: -6 }}
             animate={{ scale: 1, opacity: 1, rotate: 0 }}
             exit={{ scale: 0.8, opacity: 0 }}
-            style={{ position: 'absolute', left: 400, top: 210, width: 800, height: 560 }}
+            style={portrait ? { position: 'absolute', left: 50, top: 340, width: 800, height: 600 } : { position: 'absolute', left: 400, top: 210, width: 800, height: 560 }}
             className="panel"
           >
             <TrButton lines={[round.teach.wordLine, round.teach.line]} style={{ position: 'absolute', top: 18, right: 18 }} />
@@ -406,7 +409,7 @@ export function ChoiceActivity({
           key={round._k}
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          style={{ position: 'absolute', left: 60, right: 60, top: 180, bottom: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 60 }}
+          style={{ position: 'absolute', left: portrait ? 30 : 60, right: portrait ? 30 : 60, top: portrait ? 290 : 180, bottom: 60, display: 'flex', flexDirection: portrait ? 'column' : 'row', alignItems: 'center', justifyContent: 'center', gap: portrait ? 34 : 60 }}
         >
           {hasVisual && <VisualView visual={round.visual} solved={!!solved} />}
           {round.visual?.type === 'listen' && (
@@ -422,7 +425,8 @@ export function ChoiceActivity({
                 flexWrap: 'wrap',
                 justifyContent: 'center',
                 gap: layout === 'sentences' ? 18 : 26,
-                maxWidth: hasVisual ? 880 : 1300,
+                maxWidth: portrait ? (layout === 'pictures' && options.length === 4 ? 600 : 840) : hasVisual ? 880 : 1300,
+                width: portrait && layout === 'sentences' ? '100%' : undefined,
               }}
             >
               {options.map((o) => (
