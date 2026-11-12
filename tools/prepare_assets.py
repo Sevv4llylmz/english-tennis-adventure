@@ -41,7 +41,7 @@ BACKGROUNDS = {
 PORTRAIT = {
     # portrait (phone) versions, 9:16 -> 900x1600
     "adventure-map": "portrait-adventure-map.webp",
-    "classroom": "portrait-classroom-purple.webp",
+    "classroom": "portrait-classroom.webp",
     "toy-shop": "portrait-toy-shop.webp",
     "grammar-room": "portrait-grammar-room.webp",
     "tennis-court": "portrait-tennis-court.webp",
