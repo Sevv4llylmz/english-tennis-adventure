@@ -1,0 +1,6 @@
+node_modules
+dist
+tools/out
+.claude
+# textbook screenshots are reference only (copyrighted) – never publish them
+assets-src/ref-*
