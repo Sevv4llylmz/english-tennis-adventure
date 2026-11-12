@@ -47,7 +47,7 @@ export function Menu() {
       <Backdrop src={BG.court} dim={0.15} />
       <Character who="alya" pose="wave" height={600} style={{ left: 150, bottom: 40 }} />
       <Character who="teacher" pose="ready" height={560} flip style={{ right: 130, bottom: 40 }} />
-      <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="panel" style={{ position: 'absolute', left: 560, top: 70, width: 480, padding: '30px 25px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
+      <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="panel" style={{ position: 'absolute', left: 560, top: 205, width: 480, padding: '30px 25px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
         <div className="title-font" style={{ fontSize: 58, fontWeight: 700, color: '#3a9d98' }}>Hi, {name}!</div>
         <div className="title-font" style={{ fontSize: 30, color: '#245d61', marginTop: -10 }}>
           {anyProgress ? `Welcome back, ${name}!` : 'Ready for an adventure?'}

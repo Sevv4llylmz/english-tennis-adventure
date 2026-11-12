@@ -4,7 +4,7 @@ import { Map as MapIcon, Settings as Gear, Star, Play } from 'lucide-react'
 import { Backdrop } from './Stage'
 import { Character } from './Character'
 import { Badge, Confetti } from './Effects'
-import { sayLine } from './Guide'
+import { sayLine, TrButton } from './Guide'
 import { sayAll, stopVoice } from '../audio/voice'
 import { sfx } from '../audio/sfx'
 import { useGame, type LevelId } from '../store/gameStore'
@@ -120,7 +120,8 @@ export function LevelShell({
         <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
           <Character who="teacher" pose="wave" height={500} style={{ left: 40, bottom: 30 }} />
           <Character who="alya" pose="happy" height={480} style={{ right: 40, bottom: 30 }} />
-          <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="panel" style={{ width: 620, padding: '36px 40px', textAlign: 'center', zIndex: 10 }}>
+          <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="panel" style={{ width: 640, padding: '34px 40px', textAlign: 'center', zIndex: 10, position: 'relative' }}>
+            <TrButton lines={[meta.name, ...intro]} style={{ position: 'absolute', top: 16, right: 16 }} />
             <div className="title-font" style={{ fontSize: 30, color: '#3a9d98', fontWeight: 600 }}>
               Level {meta.num} · {meta.place}
             </div>
@@ -128,11 +129,13 @@ export function LevelShell({
               {meta.title}
             </div>
             {intro.map((l) => (
-              <div key={l.en} style={{ fontSize: 28, fontWeight: 700, color: '#245d61' }}>
-                {named(l.en, name)}
+              <div key={l.en} style={{ marginBottom: 6 }}>
+                <div style={{ fontSize: 28, fontWeight: 700, color: '#245d61' }}>{named(l.en, name)}</div>
+                {l.tr && <div style={{ fontSize: 22, fontWeight: 800, color: '#e0709b' }}>{named(l.tr, name)}</div>}
               </div>
             ))}
-            <div style={{ fontSize: 22, color: '#7a6a55', margin: '14px 0 6px' }}>{activities.length} challenges · {activities.map((a) => a.title.en).join(' · ')}</div>
+            <div style={{ fontSize: 22, color: '#7a6a55', margin: '12px 0 2px' }}>{activities.length} challenges · {activities.map((a) => a.title.en).join(' · ')}</div>
+            <div style={{ fontSize: 19, fontWeight: 700, color: '#e0709b' }}>{activities.length} görev · {activities.map((a) => a.title.tr ?? a.title.en).join(' · ')}</div>
             <button
               className="btn btn-teal title-font"
               style={{ fontSize: 44, padding: '16px 56px', marginTop: 16 }}

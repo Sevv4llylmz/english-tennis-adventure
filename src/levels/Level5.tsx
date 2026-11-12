@@ -3,7 +3,7 @@ import { motion } from 'motion/react'
 import { Map as MapIcon, Settings as Gear, Play, RotateCcw, Trophy, Volume2 } from 'lucide-react'
 import { Backdrop } from '../components/Stage'
 import { Character } from '../components/Character'
-import { Guide, sayLine } from '../components/Guide'
+import { Guide, sayLine, TrButton } from '../components/Guide'
 import { TopButton } from '../components/LevelShell'
 import { OptionButton, VisualView, outcomeFor } from '../components/ChoiceActivity'
 import { SentenceBuilder } from '../components/SentenceBuilder'
@@ -271,11 +271,14 @@ export function Level5() {
 
       {phase === 'intro' && (
         <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', background: 'rgba(255,247,232,0.25)' }}>
-          <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="panel" style={{ width: 640, padding: '30px 40px', textAlign: 'center', marginTop: 120 }}>
+          <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="panel" style={{ width: 640, padding: '30px 40px', textAlign: 'center', marginTop: 120, position: 'relative' }}>
+            <TrButton lines={[levelMeta('tennis').name, ...L5.intro]} style={{ position: 'absolute', top: 16, right: 16 }} />
             <div className="title-font" style={{ fontSize: 30, color: '#3a9d98', fontWeight: 600 }}>Level 5 · Final Tournament</div>
             <div className="title-font" style={{ fontSize: 64, fontWeight: 700, color: '#e0a72e' }}>Tennis Challenge!</div>
             <div style={{ fontSize: 26, fontWeight: 700, color: '#245d61' }}>{L5.intro[1].en}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: '#e0709b' }}>{L5.intro[1].tr}</div>
             <div style={{ fontSize: 21, color: '#7a6a55', marginTop: 10 }}>2 right answers = 1 point · 0 → 15 → 30 → 40 → Game!</div>
+            <div style={{ fontSize: 19, fontWeight: 700, color: '#e0709b' }}>2 doğru cevap = 1 sayı · Yanlış cevapta sayıyı öğretmen alır.</div>
             <button className="btn btn-teal title-font" style={{ fontSize: 44, padding: '14px 56px', marginTop: 20 }} onClick={begin}>
               <Play size={36} fill="#fff" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 10 }} /> Play!
             </button>
