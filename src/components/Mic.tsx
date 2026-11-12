@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { motion } from 'motion/react'
 import { Mic, Loader2, ShieldCheck, MicOff } from 'lucide-react'
 import { listenOnce, recognitionSupported, stopListening, type RecError } from '../speech/recognition'
@@ -7,7 +8,6 @@ import { stopVoice } from '../audio/voice'
 import { sfx } from '../audio/sfx'
 import { useGame, type LevelId } from '../store/gameStore'
 import { sayLine } from './Guide'
-import { useStage } from './Stage'
 import { UI } from '../content/lines'
 
 export type MicOutcome = { kind: MatchOutcome; heard: string } | { kind: 'error'; error: RecError }
@@ -23,32 +23,57 @@ const ERROR_TEXT: Record<RecError, string> = {
   other: 'Something went wrong. Try again or tap the answer!',
 }
 
-/** Grown-up consent before the browser speech recogniser is used (it may send audio to the browser vendor). */
+/**
+ * Grown-up consent before the browser speech recogniser is used (it may send audio to the browser vendor).
+ * Rendered with a portal straight into <body>, outside the scaled game stage, so it is always centred
+ * on the real screen and sized in real pixels (big, easy buttons on phones too).
+ */
 export function MicConsent({ onClose }: { onClose: (ok: boolean) => void }) {
   const setSettings = useGame((s) => s.setSettings)
-  const { W } = useStage()
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(20,50,52,0.55)', zIndex: 200, display: 'grid', placeItems: 'center' }}>
-      <div className="panel" style={{ width: Math.min(980, W - 40), padding: '34px 44px' }}>
-        <div className="title-font" style={{ fontSize: 40, fontWeight: 700, color: '#245d61', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <ShieldCheck size={44} /> For grown-ups · Yetişkinler için
+  const reduced = useGame((s) => s.settings.reducedMotion)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+  const btn: React.CSSProperties = { flex: '1 1 200px', minHeight: 56, padding: '12px 18px', fontSize: 'clamp(17px, 2.4vw, 22px)', borderRadius: 999 }
+  return createPortal(
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="mic-consent-title"
+      onClick={() => onClose(false)}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(20,50,52,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, boxSizing: 'border-box' }}
+    >
+      <motion.div
+        className="panel"
+        onClick={(e) => e.stopPropagation()}
+        initial={reduced ? false : { scale: 0.85, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        style={{ background: '#fff7e8', width: 'min(620px, 100%)', maxHeight: 'calc(100dvh - 32px)', overflowY: 'auto', padding: 'clamp(18px, 4vw, 30px)', boxSizing: 'border-box', borderRadius: 28 }}
+      >
+        <div id="mic-consent-title" className="title-font" style={{ fontSize: 'clamp(20px, 3.4vw, 28px)', fontWeight: 700, color: '#245d61', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <ShieldCheck size={30} style={{ flex: 'none' }} /> For grown-ups · Yetişkinler için
         </div>
-        <p style={{ fontSize: 24, lineHeight: 1.45, margin: '16px 0' }}>
+        <p style={{ fontSize: 'clamp(14px, 2vw, 17px)', lineHeight: 1.45, margin: '12px 0', color: '#23464a' }}>
           Speaking practice uses your browser&apos;s speech recognition. In Chrome and Edge the spoken audio is sent to the browser
           maker&apos;s speech service (Google / Microsoft) to be turned into text. This game does <b>not</b> record or store any audio – it only
           compares the returned text with the expected answer.
         </p>
-        <p style={{ fontSize: 22, lineHeight: 1.45, margin: '0 0 18px', color: '#7a4a62' }}>
+        <p style={{ fontSize: 'clamp(14px, 2vw, 17px)', lineHeight: 1.45, margin: '0 0 18px', color: '#7a4a62' }}>
           Konuşma alıştırması tarayıcının ses tanıma özelliğini kullanır. Chrome ve Edge&apos;de konuşma sesi metne çevrilmek için tarayıcı
           şirketinin sunucusuna gönderilir. Oyun hiçbir ses kaydı saklamaz. Mikrofonsuz da oynanabilir: cevaplara dokunmak yeterli.
         </p>
-        <div style={{ display: 'flex', gap: 20, justifyContent: 'flex-end' }}>
-          <button className="btn btn-cream" style={{ padding: '14px 30px', fontSize: 26 }} onClick={() => onClose(false)}>
+        <div style={{ display: 'flex', flexWrap: 'wrap-reverse', gap: 12 }}>
+          <button className="btn btn-cream title-font" style={btn} onClick={() => onClose(false)}>
             Not now · Şimdi değil
           </button>
           <button
-            className="btn btn-teal"
-            style={{ padding: '14px 30px', fontSize: 26 }}
+            className="btn btn-teal title-font"
+            style={btn}
+            autoFocus
             onClick={() => {
               setSettings({ micEnabled: true })
               onClose(true)
@@ -57,8 +82,9 @@ export function MicConsent({ onClose }: { onClose: (ok: boolean) => void }) {
             Allow speaking · İzin ver
           </button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </div>,
+    document.body,
   )
 }
 
