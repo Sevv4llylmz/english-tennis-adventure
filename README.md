@@ -58,7 +58,7 @@ scripts/export-lines.ts  lists every spoken line from src/content
 | 4 | Sentence Magic | supplied colourful Grammar Room | It is → Is it (animated word blocks + build it yourself), It's = It is, isn't = is not (animated contractions, long/short toggle, same meaning), Yes/No (✓/✗ icons, not colour only), a / an (drag the article into the gap), Build a Sentence (word tiles) |
 | 5 | Tennis Challenge | supplied side-view court | See below |
 
-Rewards: Warm-Up Star, English Detective Badge, Toy Explorer Badge, Sentence Wizard Badge, English Tennis Cup. On the map the levels follow the path from right to left, then up to the school. Levels unlock in order; the tennis final opens after the four learning areas. Progress inside a level is saved per activity ("Continue").
+Rewards: Warm-Up Star, English Detective Badge, Toy Explorer Badge, Sentence Wizard Badge, English Tennis Cup. On the map the levels follow the path from right to left, then up to the school. All levels are open, so the teacher can choose the order (set `OPEN_ALL_LEVELS` in `src/store/gameStore.ts` to `false` to unlock them one by one again). Progress inside a level is saved per activity ("Continue").
 
 ### Tennis rules (documented simplification)
 - Alya (left) and Teacher (right) are separate sprite layers facing each other; the ball is a separate animated object with a shadow, arcing over the net and bouncing once on each side.

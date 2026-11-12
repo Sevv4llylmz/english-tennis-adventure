@@ -175,7 +175,14 @@ export const useGame = create<GameState>()(
   ),
 )
 
+/**
+ * All levels are open: the teacher decides the order in the lesson.
+ * (To bring back step-by-step unlocking, set OPEN_ALL_LEVELS to false.)
+ */
+const OPEN_ALL_LEVELS = true
+
 export function isUnlocked(level: LevelId, completed: Partial<Record<LevelId, boolean>>) {
+  if (OPEN_ALL_LEVELS) return true
   const i = LEVEL_ORDER.indexOf(level)
   if (i === 0) return true
   // The tennis final needs all four learning areas; the others unlock one after another.
