@@ -23,6 +23,22 @@ function ac() {
   return ctx
 }
 
+/**
+ * After the microphone was used, phones (and Windows) can leave the browser's audio in a quieter
+ * "voice call" mode. Closing the old audio engine and building a fresh one puts the game sounds back
+ * on the normal media output at full volume. Music keeps playing (its timer uses the new engine).
+ */
+export function restoreAudioAfterMic() {
+  const old = ctx
+  ctx = null
+  sfxGain = null
+  musicGain = null
+  old?.close().catch(() => {})
+  const c = ac()
+  if (c && c.state === 'suspended') c.resume().catch(() => {})
+  music.refresh()
+}
+
 /** Call from a user gesture (browser autoplay rules). */
 export function unlockAudio() {
   const c = ac()

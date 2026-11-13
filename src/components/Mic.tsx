@@ -5,7 +5,7 @@ import { Mic, Loader2, ShieldCheck, MicOff } from 'lucide-react'
 import { listenOnce, recognitionSupported, stopListening, type RecError } from '../speech/recognition'
 import { matchSpeech, type MatchOutcome, type SpeakSpec } from '../speech/match'
 import { stopVoice } from '../audio/voice'
-import { sfx } from '../audio/sfx'
+import { sfx, restoreAudioAfterMic } from '../audio/sfx'
 import { useGame, type LevelId } from '../store/gameStore'
 import { sayLine } from './Guide'
 import { UI } from '../content/lines'
@@ -132,7 +132,8 @@ export function MicButton({
     setState('listening')
     const res = await listenOnce(7000)
     setState('processing')
-    await new Promise((r) => setTimeout(r, 250))
+    await new Promise((r) => setTimeout(r, 350))
+    restoreAudioAfterMic()
     setState('idle')
     if (!res.ok) {
       recordSpeech({ level, item, result: 'error', heard: res.error })

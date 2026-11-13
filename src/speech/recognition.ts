@@ -58,6 +58,8 @@ export function listenOnce(timeoutMs = 7000): Promise<RecResult> {
       if (settled) return
       settled = true
       clearTimeout(timer)
+      // release the microphone right away so the device leaves its "call" audio mode
+      rec.onresult = rec.onerror = rec.onend = null
       try {
         rec.abort()
       } catch {
